@@ -1,14 +1,11 @@
 import { ObjectType, Field } from "type-graphql";
 
 @ObjectType()
-export class Sales {
-    @Field()
-    id: number;
-
-    @Field()
-    name: string;
-
+export class TotalSales {
     @Field()
     amount: number;
+
+	@Field()
+    count: number;
 
 }
