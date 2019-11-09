@@ -4,7 +4,7 @@ import * as Express from "express";
 import { buildSchema } from "type-graphql";
 // import pool from "../DbConnection";
 
-import { HelloResolver } from "../modules/sale/getSales"
+import { SalesResolver } from "../modules/sale/getSales"
 
 const main = async () => {
 
@@ -20,13 +20,13 @@ const main = async () => {
 	// });
 
 	const schema = await buildSchema({
-		resolvers: [HelloResolver],
+		resolvers: [SalesResolver],
 	});
-	const apolloServer = new ApolloServer({schema});
+	const apolloServer = new ApolloServer({ schema });
 
 	const app = Express();
 
-	apolloServer.applyMiddleware({app});
+	apolloServer.applyMiddleware({ app });
 
 	app.listen(4000, async () => {
 		console.log('Server started on http://localhost:4000/graphql');

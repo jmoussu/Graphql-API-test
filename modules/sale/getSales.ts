@@ -1,7 +1,8 @@
-import { Resolver, Query, Mutation } from "type-graphql";
+import { Resolver, Query, Mutation, Arg } from "type-graphql";
 import db from "../../DbConnection";
 import { Sales } from "../../src/entity/Sales";
 import { TotalSales } from "../../src/entity/TotalSales";
+import { ExportSales } from "../../src/entity/ExportSales";
 import * as fs from 'fs';
 import xlsx from 'node-xlsx';
 // import * as XLSX from 'xlsx';
@@ -9,46 +10,69 @@ import xlsx from 'node-xlsx';
 
 
 @Resolver()
-export class HelloResolver {
+export class SalesResolver {
 
 	private salesCollection = async () => {
 		const sales = await db.query('select * from sales');
 		return sales.rows;
 	}
 
-	// private s2ab = (s: any) => {
-	// 	var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
-	// 	var view = new Uint8Array(buf);  //create uint8array as viewer
-	// 	for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
-	// 	return buf;
-	// }
-
-	@Mutation(() => String)
+	@Mutation(() => ExportSales)
 	async exportSales() {
 
-
-		const data =
-			[
-				["col_heading1", "col_heading2", "col_heading3"],
-				["row1_val1", "row1_val2", "row1_val3"],
-				["row2_val1", "row2_val2", "row2_val3"],
-				["row3_val1", "row3_val2", "row3_val3"]
-			]
-		const buffer = xlsx.build([{ name: "sales.xlsx", data: data }])
-		fs.writeFile('demo.xlsx', buffer, (err) => {
-			if (err) throw err
+		const sales = await this.salesCollection();
+		sales.map((x) => {
+			return x.amount = parseFloat(x.amount);
 		})
-		return "hello world";
+		console.log(sales);
+		const aoaSales = sales.map(function (obj) {
+			return Object.keys(obj).map(function (key) {
+				return obj[key];
+			});
+		});
+
+		let data:any[] =
+			[
+				["ID", "Name", "Amount"]
+			]
+
+		data = data.concat(aoaSales);
+
+		const value = data.length;
+		const dataFooter = [['', 'Total', {f: `=SUM(C2:C${value})`}]]
+
+		data = data.concat(dataFooter);
+		
+		console.log(data);
+		
+		const buffer = xlsx.build([{ name: "sales.xlsx", data: data }])
+
+		if (!fs.existsSync('uploads')){
+			fs.mkdirSync('uploads');
+		}
+		if (!fs.existsSync('uploads/sales')){
+			fs.mkdirSync('uploads/sales');
+		}
+
+		try {
+			fs.writeFileSync('uploads/sales/sales.xlsx', buffer)
+		}
+		catch (error) {
+			return "Error: can't create file maybe he is allready open"
+		}
+		return {"filePath": 'uploads/sales/sales.xlsx'};
 	}
 
 	@Query(() => [Sales])
-	async sales() {
+	async sales(@Arg("page", { nullable: true }) page?: number) {
 		const sales = await this.salesCollection();
 
-		console.log(typeof (sales));
-		console.log(sales);
-
-		return sales;
+		// console.log(typeof (sales));
+		// console.log(sales);
+		if (page)
+			return sales;
+		else
+			return sales;
 	}
 
 	@Query(() => TotalSales)
