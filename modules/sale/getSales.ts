@@ -5,9 +5,6 @@ import { TotalSales } from "../../src/entity/TotalSales";
 import { ExportSales } from "../../src/entity/ExportSales";
 import * as fs from 'fs';
 import xlsx from 'node-xlsx';
-// import * as XLSX from 'xlsx';
-// import { saveAs } from 'file-saver';
-
 
 @Resolver()
 export class SalesResolver {
@@ -24,14 +21,13 @@ export class SalesResolver {
 		sales.map((x) => {
 			return x.amount = parseFloat(x.amount);
 		})
-		console.log(sales);
 		const aoaSales = sales.map(function (obj) {
 			return Object.keys(obj).map(function (key) {
 				return obj[key];
 			});
 		});
 
-		let data:any[] =
+		let data: any[] =
 			[
 				["ID", "Name", "Amount"]
 			]
@@ -39,18 +35,16 @@ export class SalesResolver {
 		data = data.concat(aoaSales);
 
 		const value = data.length;
-		const dataFooter = [['', 'Total', {f: `=SUM(C2:C${value})`}]]
+		const dataFooter = [['', 'Total', { f: `=SUM(C2:C${value})` }]]
 
 		data = data.concat(dataFooter);
-		
-		console.log(data);
-		
+
 		const buffer = xlsx.build([{ name: "sales.xlsx", data: data }])
 
-		if (!fs.existsSync('uploads')){
+		if (!fs.existsSync('uploads')) {
 			fs.mkdirSync('uploads');
 		}
-		if (!fs.existsSync('uploads/sales')){
+		if (!fs.existsSync('uploads/sales')) {
 			fs.mkdirSync('uploads/sales');
 		}
 
@@ -60,15 +54,12 @@ export class SalesResolver {
 		catch (error) {
 			return "Error: can't create file maybe he is allready open"
 		}
-		return {"filePath": 'uploads/sales/sales.xlsx'};
+		return { "filePath": 'uploads/sales/sales.xlsx' };
 	}
 
 	@Query(() => [Sales])
 	async sales(@Arg("page", { nullable: true }) page?: number) {
 		const sales = await this.salesCollection();
-
-		// console.log(typeof (sales));
-		// console.log(sales);
 		if (page)
 			return sales;
 		else
@@ -85,9 +76,6 @@ export class SalesResolver {
 			count = count + 1;
 		})
 		amount = parseFloat(amount.toFixed(2));
-		console.log(amount);
-		console.log(count);
-
 		return { amount: amount, count: count };
 	}
 
